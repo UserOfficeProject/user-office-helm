@@ -1,0 +1,35 @@
+duo-db:
+  secret:
+    data:
+      POSTGRES_DB: ZHVv
+      POSTGRES_HOSTNAME: dXNlci1vZmZpY2UtYXBwLWR1by1kYg==
+      POSTGRES_PASSWORD: ZHVvLXBhc3N3b3Jk
+      POSTGRES_PORT: NTQzMg==
+      POSTGRES_URL: cG9zdGdyZXM6Ly9kdW8tdXNlcjpkdW8tcGFzc3dvcmRAdXNlci1vZmZpY2UtYXBwLWR1by1kYjo1NDMyL2R1bw==
+      POSTGRES_USER: ZHVvLXVzZXI=
+
+duo-frontend:
+  replicaCount: 1
+  ingress:
+    enabled: true
+    host: #Hostname of your application
+
+duo-backend:
+  replicaCount: 1
+  ingress:
+    enabled: true
+    host: #Hostname of your application
+
+  configmap:
+    data:
+      AUTH_CLIENT_ID: # Client ID for OIDC
+      AUTH_CLIENT_SECRET: # Secret for OIDC
+      AUTH_DISCOVERY_URL: # Well-known URL for OIDC
+      NODE_ENV: development
+      TZ: Europe/Stockholm
+      BASE_URL: localhost:4000
+      JWT_TOKEN_LIFE: 7d
+      JWT_SECRET: secret
+      DATE_FORMAT: dd-MM-yyyy
+      DATE_TIME_FORMAT: dd-MM-yyyy HH:mm
+      USER_OFFICE_FACTORY_ENDPOINT: http://user-office-app-duo-factory:4500/generate
