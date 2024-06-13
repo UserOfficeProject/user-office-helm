@@ -12,13 +12,13 @@ duo-frontend:
   replicaCount: 1
   ingress:
     enabled: true
-    host: #Hostname of your application
+    host: localhost
 
 duo-backend:
   replicaCount: 1
   ingress:
     enabled: true
-    host: #Hostname of your application
+    host: localhost
 
   configmap:
     data:
