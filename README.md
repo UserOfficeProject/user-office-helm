@@ -32,8 +32,8 @@ The following table lists the configurable parameters of the user-office helm ch
 | `duo-frontend.ingress.host` | URL for frontend | `localhost` |
 | `duo-backend.ingress.host` | URL for backend | `localhost` |
 | `duo-backend.configmap.data.AUTH_CLIENT_ID` | OpenID Client ID | `` |
-| `duo-backend.configmap.data.AUTH_CLIENT_SECRET` | OpenID Client ID | `` |
-| `duo-backend.configmap.data.AUTH_DISCOVERY_URL` | OpenID Client ID | `` |
+| `duo-backend.configmap.data.AUTH_CLIENT_SECRET` | OpenID Client Secret | `` |
+| `duo-backend.configmap.data.AUTH_DISCOVERY_URL` | OpenID well-known endpoint, include entire path | `` |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
