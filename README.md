@@ -1,4 +1,6 @@
-# user office helm chart
+# User Office helm chart
+
+This helm chart will install the entire user office platform including the PostgreSQL database. 
 
 ## Prerequisites
 
