@@ -29,8 +29,11 @@ The following table lists the configurable parameters of the user-office helm ch
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
-| `global.imagePullSecrets` | Reference to one or more secrets to be used when pulling images | `[]` |
-
+| `duo-frontend.ingress.host` | URL for frontend | `localhost` |
+| `duo-backend.ingress.host` | URL for backend | `localhost` |
+| `duo-backend.configmap.data.AUTH_CLIENT_ID` | OpenID Client ID | `` |
+| `duo-backend.configmap.data.AUTH_CLIENT_SECRET` | OpenID Client ID | `` |
+| `duo-backend.configmap.data.AUTH_DISCOVERY_URL` | OpenID Client ID | `` |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
