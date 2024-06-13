@@ -8,19 +8,24 @@ This helm chart will install the entire user office platform including the Postg
 
 ## Installing the Chart
 
-To install the chart with the release name `my-release`:
+To install the chart with the release name `user-office-app`:
 
 ```console
-$  helm install -f values.dev.yaml my-release ./user-office-app    
+$  helm install -f values.yaml user-office-app \
+  --set duo-backend.configmap.data.AUTH_CLIENT_ID=<AUTH_CLIENT_ID> \
+  --set duo-backend.configmap.data.AUTH_CLIENT_SECRET=<AUTH_CLIENT_SECRET> \
+  --set duo-backend.configmap.data.AUTH_DISCOVERY_URL=<AUTH_CLIENT_SECRET> \
+  ./user-office-app    
 ```
 
+This will launch the application with the hostname localhost.
 
 ## Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the `user-office-app` deployment:
 
 ```console
-$ helm delete my-release
+$ helm delete user-office-app
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
