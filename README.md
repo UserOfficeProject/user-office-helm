@@ -8,6 +8,8 @@ This helm chart will install the entire user office platform including the Postg
 
 ## Installing the Chart
 
+The user office requires OpenID Connect (OIDC) for authentication. the redirect URL to be used when setting up you OIDC provider is <HOSTNAME>/external-auth.
+
 To install the chart with the release name `user-office-app`:
 
 ```console
