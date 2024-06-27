@@ -36,3 +36,7 @@ dependencies:
   - name: duo-factory
     version: 0.1.0
     repository: "file://../factory/duo-factory"
+  - name: rabbitmq
+    condition: rabbitmq.enabled
+    repository: https://charts.bitnami.com/bitnami
+    version: 14.4.2

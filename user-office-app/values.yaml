@@ -19,7 +19,6 @@ duo-backend:
   ingress:
     enabled: true
     host: localhost
-
   configmap:
     data:
       AUTH_CLIENT_ID: # Client ID for OIDC
@@ -33,3 +32,11 @@ duo-backend:
       DATE_FORMAT: dd-MM-yyyy
       DATE_TIME_FORMAT: dd-MM-yyyy HH:mm
       USER_OFFICE_FACTORY_ENDPOINT: http://user-office-app-duo-factory:4500/generate
+
+rabbitmq:
+  enabled: false
+  auth:
+    username: duo-user
+    password: duo-password
+  persistence:
+    enabled: false
