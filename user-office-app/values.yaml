@@ -1,13 +1,3 @@
-duo-db:
-  secret:
-    data:
-      POSTGRES_DB: ZHVv
-      POSTGRES_HOSTNAME: dXNlci1vZmZpY2UtYXBwLWR1by1kYg==
-      POSTGRES_PASSWORD: ZHVvLXBhc3N3b3Jk
-      POSTGRES_PORT: NTQzMg==
-      POSTGRES_URL: cG9zdGdyZXM6Ly9kdW8tdXNlcjpkdW8tcGFzc3dvcmRAdXNlci1vZmZpY2UtYXBwLWR1by1kYjo1NDMyL2R1bw==
-      POSTGRES_USER: ZHVvLXVzZXI=
-
 duo-frontend:
   replicaCount: 1
   ingress:
@@ -40,3 +30,14 @@ rabbitmq:
     password: duo-password
   persistence:
     enabled: false
+
+duo-db:
+  fullnameOverride: duo-db
+  serviceBindings:
+    enabled: true
+  persistence:
+    enabled: false
+  auth:
+    username: duo-user
+    password: duo-password
+    database: duo
