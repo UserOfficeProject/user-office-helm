@@ -13,8 +13,8 @@ env:
   - name: DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: duo-db-secret
-        key: POSTGRES_URL
+        name: duo-db-svcbind-custom-user
+        key: uri
 
 envFrom: {}
 
