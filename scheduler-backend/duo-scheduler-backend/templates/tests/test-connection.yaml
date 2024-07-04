@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "duo-scheduler-backend.fullname" . }}-test-connection"
+  labels:
+    {{- include "duo-scheduler-backend.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "duo-scheduler-backend.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

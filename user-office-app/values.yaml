@@ -21,15 +21,10 @@ duo-backend:
       JWT_SECRET: secret
       DATE_FORMAT: dd-MM-yyyy
       DATE_TIME_FORMAT: dd-MM-yyyy HH:mm
-      USER_OFFICE_FACTORY_ENDPOINT: http://user-office-app-duo-factory:4500/generate
+      USER_OFFICE_FACTORY_ENDPOINT: http://duo-factory:4500/generate
 
-rabbitmq:
-  enabled: false
-  auth:
-    username: duo-user
-    password: duo-password
-  persistence:
-    enabled: false
+duo-factory:
+  fullnameOverride: duo-factory
 
 duo-db:
   fullnameOverride: duo-db
@@ -41,3 +36,9 @@ duo-db:
     username: duo-user
     password: duo-password
     database: duo
+
+scheduler:
+  enabled: false
+
+rabbitmq:
+  enabled: false

@@ -1,0 +1,118 @@
+# Default values for duo-scheduler-backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/userofficeproject/user-office-scheduler-backend
+  tag: latest
+  pullPolicy: Always
+
+env:
+  - name: DATABASE_HOSTNAME
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-db-svcbind-custom-user
+        key: host
+  - name: DATABASE_PORT
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-db-svcbind-custom-user
+        key: port
+  - name: DATABASE_USER
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-db-svcbind-custom-user
+        key: username
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-db-svcbind-custom-user
+        key: password
+  - name: DATABASE_DATABASE
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-db-svcbind-custom-user
+        key: database
+
+  - name: USER_OFFICE_ENDPOINT
+    valueFrom:
+      configMapKeyRef:
+        name: duo-backend-configmap
+        key: USER_OFFICE_ENDPOINT
+
+  - name: RABBITMQ_CORE_EXCHANGE_NAME
+    valueFrom:
+      configMapKeyRef:
+        name: duo-backend-configmap
+        key: RABBITMQ_CORE_EXCHANGE_NAME
+
+  - name: RABBITMQ_HOSTNAME
+    valueFrom:
+      secretKeyRef:
+        name: messagebroker-svcbind
+        key: host
+
+  - name: RABBITMQ_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: messagebroker-svcbind
+        key: username
+
+  - name: RABBITMQ_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: messagebroker-svcbind
+        key: password
+
+envFrom: {}
+
+configmap:
+  data:
+    NODE_ENV: ""
+    USER_OFFICE_SCHEDULER_ENDPOINT: http://user-office-app-duo-scheduler-backend:4000/graphql
+    RABBITMQ_SCHEDULER_EXCHANGE_NAME: user_office_scheduler_backend.fanout
+    RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME: user-office-backend.proposal_scheduling.queue
+    UPSERT_PROPOSAL_BOOKING_TRIGGER_STATUSES: SCHEDULING
+    GRAYLOG_PORT: ""
+    GRAYLOG_SERVER: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 4000
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+livenessProbePath: /health-check
+
+readinessProbePath: /health-check
+
+postfix: ""

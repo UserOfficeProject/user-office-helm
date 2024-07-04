@@ -1,0 +1,123 @@
+duo-backend:
+  configmap:
+    data:
+      AUTH_CLIENT_ID: # Client ID for OIDC
+      AUTH_CLIENT_SECRET: # Secret for OIDC
+      AUTH_DISCOVERY_URL: # Well-known URL for OIDC
+      BASE_URL: localhost:4000
+      DATE_FORMAT: dd-MM-yyyy
+      DATE_TIME_FORMAT: dd-MM-yyyy HH:mm
+      DEPENDENCY_CONFIG: ess
+      JWT_SECRET: secret
+      JWT_TOKEN_LIFE: 7d
+      NODE_ENV: development
+      RABBITMQ_CORE_EXCHANGE_NAME: user_office_backend.fanout
+      TZ: Europe/Stockholm
+      USER_OFFICE_ENDPOINT: http://duo-backend:4000/graphql
+      USER_OFFICE_FACTORY_ENDPOINT: http://duo-factory:4500/generate
+  env:
+    - name: RABBITMQ_HOSTNAME
+      valueFrom:
+        secretKeyRef:
+          key: host
+          name: messagebroker-svcbind
+    - name: RABBITMQ_USERNAME
+      valueFrom:
+        secretKeyRef:
+          key: username
+          name: messagebroker-svcbind
+    - name: RABBITMQ_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: messagebroker-svcbind
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          key: uri
+          name: duo-db-svcbind-custom-user
+    - name: RABBITMQ_SCHEDULER_EXCHANGE_NAME
+      valueFrom:
+        configMapKeyRef:
+          key: RABBITMQ_SCHEDULER_EXCHANGE_NAME
+          name: duo-scheduler-backend-configmap
+    - name: RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME
+      valueFrom:
+        configMapKeyRef:
+          key: RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME
+          name: duo-scheduler-backend-configmap
+  fullnameOverride: duo-backend
+  ingress:
+    enabled: true
+    host: localhost
+  replicaCount: 1
+  secret:
+    data:
+      SPARKPOST_TOKEN: Y2hhbmdldGhpc3NlY3JldA==
+
+duo-db:
+  auth:
+    database: duo
+    password: duo-password
+    username: duo-user
+  fullnameOverride: duo-db
+  persistence:
+    enabled: false
+  serviceBindings:
+    enabled: true
+
+duo-factory:
+  fullnameOverride: duo-factory
+duo-frontend:
+  ingress:
+    enabled: true
+    host: localhost
+  replicaCount: 1
+
+duo-gateway:
+  ingress:
+    hosts:
+      - host: scheduler.localhost
+        paths:
+          - /gateway
+  replicaCount: 1
+
+duo-scheduler-backend:
+  configmap:
+    data:
+      RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME: user-office-backend.proposal_scheduling.queue
+      RABBITMQ_SCHEDULER_EXCHANGE_NAME: user_office_scheduler_backend.fanout
+      UPSERT_PROPOSAL_BOOKING_TRIGGER_STATUSES: SCHEDULING
+      USER_OFFICE_SCHEDULER_ENDPOINT: http://scheduler-backend:4000/graphql
+  fullnameOverride: scheduler-backend
+  replicaCount: 1
+duo-scheduler-frontend:
+  ingress:
+    enabled: true
+    host: scheduler.localhost
+  replicaCount: 1
+
+rabbitmq:
+  auth:
+    password: duo-password
+    username: duo-user
+  enabled: true
+  fullnameOverride: messagebroker
+  persistence:
+    enabled: false
+  serviceBindings:
+    enabled: true
+
+scheduler:
+  enabled: true
+
+scheduler-db:
+  auth:
+    database: scheduler
+    password: scheduler-password
+    username: scheduler-user
+  fullnameOverride: scheduler-db
+  persistence:
+    enabled: false
+  serviceBindings:
+    enabled: true

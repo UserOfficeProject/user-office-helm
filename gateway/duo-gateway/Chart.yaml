@@ -1,0 +1,6 @@
+apiVersion: v2
+name: duo-gateway
+description: duo-gateway helm chart
+type: application
+version: 0.1.0
+appVersion: latest

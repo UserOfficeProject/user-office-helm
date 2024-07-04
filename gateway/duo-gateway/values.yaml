@@ -1,0 +1,84 @@
+# Default values for duo-gateway.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/userofficeproject/user-office-gateway
+  tag: develop
+  pullPolicy: Always
+
+env:
+  - name: USER_OFFICE_BACKEND
+    valueFrom:
+      configMapKeyRef:
+        name: duo-backend-configmap
+        key: USER_OFFICE_ENDPOINT
+
+  - name: USER_OFFICE_SCHEDULER_BACKEND
+    valueFrom:
+      configMapKeyRef:
+        name: duo-scheduler-backend-configmap
+        key: USER_OFFICE_SCHEDULER_ENDPOINT
+
+envFrom: {}
+
+configmap:
+  data:
+    GATEWAY_HOST: duo-gateway:4100
+    NODE_ENV: ""
+    GRAYLOG_PORT: ""
+    GRAYLOG_SERVER: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 4100
+
+ingress:
+  enabled: true
+  pathType: ImplementationSpecific
+  tls: []
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+    nginx.org/client-max-body-size: "16m"
+  hosts:
+    - host: "useroffice"
+      paths:
+        - /gateway
+    - host: "scheduler-useroffice"
+      paths:
+        - /gateway
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+livenessProbePath: /gateway\?query=%7B__typename%7D
+
+readinessProbePath: /gateway\?query=%7B__typename%7D

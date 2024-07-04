@@ -41,3 +41,20 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     version: 15.5.11
     alias: duo-db
+  - name: duo-scheduler-backend
+    condition: scheduler.enabled
+    version: 0.1.0
+    repository: "file://../scheduler-backend/duo-scheduler-backend"
+  - name: duo-scheduler-frontend
+    condition: scheduler.enabled
+    version: 0.1.0
+    repository: "file://../scheduler-frontend/duo-scheduler-frontend"
+  - name: duo-gateway
+    condition: scheduler.enabled
+    version: 0.1.0
+    repository: "file://../gateway/duo-gateway"
+  - name: postgresql
+    condition: scheduler.enabled
+    repository: https://charts.bitnami.com/bitnami
+    version: 15.5.11
+    alias: scheduler-db
