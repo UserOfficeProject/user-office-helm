@@ -50,6 +50,10 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
+## Scheduler
+
+There is the possibility to also install the scheduler module, to do this exchange the values.yaml file for values.scheduler.yaml. The scheduler will connect to the User Office core via RabbitMQ. 
+
 ## Dependency config
 
 In order to handle the complexity of facilities having different IT-landscapes the User Office software utilizes dependency injection. For a new facility to be able to configure the usage of email services and RabbitMQ it is needed to add a new dependency file in the backend.
