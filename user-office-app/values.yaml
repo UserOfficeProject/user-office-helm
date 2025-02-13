@@ -27,6 +27,9 @@ duo-factory:
   fullnameOverride: duo-factory
 
 duo-db:
+  # If disabled, database configuration for external Postgresql should be
+  # provided via .duo-backend.env environment.
+  enabled: true
   fullnameOverride: duo-db
   serviceBindings:
     enabled: true

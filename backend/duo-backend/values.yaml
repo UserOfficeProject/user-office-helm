@@ -9,12 +9,12 @@ image:
   tag: develop
   pullPolicy: Always
 
-env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: uri
+env: []
+#   - name: DATABASE_URL
+#     valueFrom:
+#       secretKeyRef:
+#         name: duo-db-svcbind-custom-user
+#         key: uri
 
 envFrom: {}
 
