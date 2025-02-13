@@ -9,12 +9,12 @@ image:
   tag: develop
   pullPolicy: Always
 
-env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: uri
+env: []
+#   - name: DATABASE_URL
+#     valueFrom:
+#       secretKeyRef:
+#         name: duo-db-svcbind-custom-user
+#         key: uri
 
 envFrom: {}
 
@@ -56,6 +56,15 @@ ingress:
     nginx.org/client-max-body-size: "16m"
 
 resources: {}
+
+# -- Backend component needs a storage for Uploads.
+persistence:
+  # -- If false, an EmptyDir is used.
+  enabled: false
+  size: ""
+  storageClassName: ""
+  # Should be ReadWriteMany, unless only one Pod is deployed.
+  accessMode: ReadWriteMany
 
 nodeSelector: {}
 
