@@ -5,18 +5,30 @@ This helm chart will install the entire user office platform including the Postg
 ## Prerequisites
 
 - Kubernetes
+- Helm
 
 ## Installing the Chart
 
 The user office requires OpenID Connect (OIDC) for authentication. the redirect URL to be used when setting up you OIDC provider is <HOSTNAME>/external-auth.
 
-To install the chart with the release name `user-office-app`:
+### 1. Build Helm Dependencies
+
+Before installing, navigate to the user-office-app directory and run:
 
 ```console
-$  helm install -f values.yaml user-office-app \
+cd user-office-helm/user-office-app
+helm dependency build
+```
+
+### 2. Install the Hlem Chart
+
+From the `user-office-helm` directory, install the chart with the release name user-office-app:
+
+```console
+helm install -f user-office-app/values.yaml user-office-app \
   --set duo-backend.configmap.data.AUTH_CLIENT_ID=<AUTH_CLIENT_ID> \
   --set duo-backend.configmap.data.AUTH_CLIENT_SECRET=<AUTH_CLIENT_SECRET> \
-  --set duo-backend.configmap.data.AUTH_DISCOVERY_URL=<AUTH_CLIENT_SECRET> \
+  --set duo-backend.configmap.data.AUTH_DISCOVERY_URL=<AUTH_DISCOVERY_URL> \
   ./user-office-app
 ```
 
@@ -52,7 +64,7 @@ Alternatively, a YAML file that specifies the values for the above parameters ca
 
 ## Scheduler
 
-There is the possibility to also install the scheduler module, to do this exchange the values.yaml file for values.scheduler.yaml. The scheduler will connect to the User Office core via RabbitMQ. 
+There is the possibility to also install the scheduler module, to do this exchange the values.yaml file for values.scheduler.yaml. The scheduler will connect to the User Office core via RabbitMQ.
 
 ## Dependency config
 
