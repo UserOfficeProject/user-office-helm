@@ -54,10 +54,7 @@ podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContext:
-  capabilities:
-    add:
-      - SYS_ADMIN
+securityContext: {}
 
 service:
   type: ClusterIP
