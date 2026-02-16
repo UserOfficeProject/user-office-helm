@@ -59,6 +59,11 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "16m"
     nginx.org/client-max-body-size: "16m"
+    # Increase read/send timeouts from the default 60s to 600s (10 min).
+    # Without this, nginx kills long-running connections (e.g. PDF generation
+    # via the factory service).
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
 
 resources: {}
 
