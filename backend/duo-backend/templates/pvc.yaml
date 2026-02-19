@@ -1,0 +1,17 @@
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ include "duo-backend.fullname" . }}"
+  labels:
+    {{- include "duo-backend.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ required ".Values.persistence.accessMode must be set" .Values.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ required ".Values.persistence.size must be set" .Values.persistence.size }}
+  {{- with .Values.persistence.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end }}

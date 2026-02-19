@@ -41,6 +41,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     version: 15.5.11
     alias: duo-db
+    condition: duo-db.enabled
   - name: duo-scheduler-backend
     condition: scheduler.enabled
     version: 0.1.0
