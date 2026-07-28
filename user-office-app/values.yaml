@@ -1,3 +1,22 @@
+global:
+  databases:
+    core:
+      secretName: duo-database
+      host: ""
+      port: 5432
+      database: ""
+      username: ""
+      password: ""
+      sslMode: require
+    scheduler:
+      secretName: scheduler-database
+      host: ""
+      port: 5432
+      database: ""
+      username: ""
+      password: ""
+      sslMode: require
+
 duo-frontend:
   replicaCount: 1
   ingress:
@@ -25,17 +44,6 @@ duo-backend:
 
 duo-factory:
   fullnameOverride: duo-factory
-
-duo-db:
-  fullnameOverride: duo-db
-  serviceBindings:
-    enabled: true
-  persistence:
-    enabled: false
-  auth:
-    username: duo-user
-    password: duo-password
-    database: duo
 
 scheduler:
   enabled: false

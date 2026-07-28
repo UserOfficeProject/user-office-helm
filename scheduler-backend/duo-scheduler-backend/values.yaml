@@ -9,33 +9,12 @@ image:
   tag: latest
   pullPolicy: Always
 
-env:
-  - name: DATABASE_HOSTNAME
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: host
-  - name: DATABASE_PORT
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: port
-  - name: DATABASE_USER
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: username
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: password
-  - name: DATABASE_DATABASE
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: database
+global:
+  databases:
+    scheduler:
+      secretName: scheduler-database
 
+env:
   - name: USER_OFFICE_ENDPOINT
     valueFrom:
       configMapKeyRef:

@@ -35,7 +35,34 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            - name: DATABASE_HOSTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "global.databases.core.secretName is required" .Values.global.databases.core.secretName | quote }}
+                  key: host
+            - name: DATABASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "global.databases.core.secretName is required" .Values.global.databases.core.secretName | quote }}
+                  key: port
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "global.databases.core.secretName is required" .Values.global.databases.core.secretName | quote }}
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "global.databases.core.secretName is required" .Values.global.databases.core.secretName | quote }}
+                  key: password
+            - name: DATABASE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "global.databases.core.secretName is required" .Values.global.databases.core.secretName | quote }}
+                  key: database
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ .Chart.Name }}{{ .Values.postfix }}-configmap

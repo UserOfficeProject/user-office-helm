@@ -9,32 +9,12 @@ image:
   tag: develop
   pullPolicy: Always
 
-env:
-  - name: DATABASE_HOSTNAME
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: host
-  - name: DATABASE_PORT
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: port
-  - name: DATABASE_USER
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: username
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: password
-  - name: DATABASE_DATABASE
-    valueFrom:
-      secretKeyRef:
-        name: duo-db-svcbind-custom-user
-        key: database
+global:
+  databases:
+    core:
+      secretName: duo-database
+
+env: []
 
 envFrom: {}
 

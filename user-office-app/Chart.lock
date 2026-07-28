@@ -1,0 +1,24 @@
+dependencies:
+- name: duo-backend
+  repository: file://../backend/duo-backend
+  version: 0.2.0
+- name: duo-frontend
+  repository: file://../frontend/duo-frontend
+  version: 0.1.0
+- name: duo-factory
+  repository: file://../factory/duo-factory
+  version: 0.2.0
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.4.2
+- name: duo-scheduler-backend
+  repository: file://../scheduler-backend/duo-scheduler-backend
+  version: 0.2.0
+- name: duo-scheduler-frontend
+  repository: file://../scheduler-frontend/duo-scheduler-frontend
+  version: 0.1.0
+- name: duo-gateway
+  repository: file://../gateway/duo-gateway
+  version: 0.1.0
+digest: sha256:0d24d55ec324f29a330fa1018609f6f9bded970e880b780b7fac5d1457de705d
+generated: "2026-07-28T14:51:19.086831+02:00"
