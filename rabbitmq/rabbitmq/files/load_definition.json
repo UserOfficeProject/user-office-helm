@@ -33,14 +33,14 @@
       "auto_delete": false
     },
     {
-      "name": "DLX__user_office_backend.fanout",
+      "name": "DLX__user_office_backend.queue",
       "vhost": "/",
       "type": "fanout",
       "durable": true,
       "auto_delete": false
     },
     {
-      "name": "DLX__user_office_scheduler_backend.fanout",
+      "name": "DLX__user_office_scheduler_backend.queue",
       "vhost": "/",
       "type": "fanout",
       "durable": true,
@@ -54,7 +54,7 @@
       "durable": true,
       "auto_delete": false,
       "arguments": {
-        "x-dead-letter-exchange": "DLX__user_office_backend.fanout"
+        "x-dead-letter-exchange": "DLX__user_office_backend.queue"
       }
     },
     {
@@ -63,7 +63,7 @@
       "durable": true,
       "auto_delete": false,
       "arguments": {
-        "x-dead-letter-exchange": "DLX__user_office_scheduler_backend.fanout"
+        "x-dead-letter-exchange": "DLX__user_office_scheduler_backend.queue"
       }
     },
     {
@@ -95,14 +95,14 @@
       "routing_key": ""
     },
     {
-      "source": "DLX__user_office_backend.fanout",
+      "source": "DLX__user_office_backend.queue",
       "vhost": "/",
       "destination": "user_office_backend.queue.dlq",
       "destination_type": "queue",
       "routing_key": ""
     },
     {
-      "source": "DLX__user_office_scheduler_backend.fanout",
+      "source": "DLX__user_office_scheduler_backend.queue",
       "vhost": "/",
       "destination": "user_office_scheduler_backend.queue.dlq",
       "destination_type": "queue",
