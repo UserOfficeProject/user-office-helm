@@ -20,17 +20,17 @@ duo-backend:
       valueFrom:
         secretKeyRef:
           key: host
-          name: messagebroker-svcbind
+          name: duo-rabbitmq-svcbind
     - name: RABBITMQ_USERNAME
       valueFrom:
         secretKeyRef:
           key: username
-          name: messagebroker-svcbind
+          name: duo-rabbitmq-svcbind
     - name: RABBITMQ_PASSWORD
       valueFrom:
         secretKeyRef:
           key: password
-          name: messagebroker-svcbind
+          name: duo-rabbitmq-svcbind
     - name: RABBITMQ_SCHEDULER_EXCHANGE_NAME
       valueFrom:
         configMapKeyRef:
@@ -41,7 +41,6 @@ duo-backend:
         configMapKeyRef:
           key: RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME
           name: duo-scheduler-backend-configmap
-  fullnameOverride: duo-backend
   ingress:
     enabled: true
     host: localhost
@@ -50,8 +49,6 @@ duo-backend:
     data:
       SPARKPOST_TOKEN: Y2hhbmdldGhpc3NlY3JldA==
 
-duo-factory:
-  fullnameOverride: duo-factory
 duo-frontend:
   ingress:
     enabled: true
@@ -72,8 +69,7 @@ duo-scheduler-backend:
       RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME: user-office-backend.proposal_scheduling.queue
       RABBITMQ_SCHEDULER_EXCHANGE_NAME: user_office_scheduler_backend.fanout
       UPSERT_PROPOSAL_BOOKING_TRIGGER_STATUSES: SCHEDULING
-      USER_OFFICE_SCHEDULER_ENDPOINT: http://scheduler-backend:4000/graphql
-  fullnameOverride: scheduler-backend
+        USER_OFFICE_SCHEDULER_ENDPOINT: http://duo-scheduler-backend:4000/graphql
   replicaCount: 1
 duo-scheduler-frontend:
   ingress:
@@ -85,12 +81,10 @@ rabbitmq:
   auth:
     password: duo-password
     username: duo-user
+    secretName: duo-rabbitmq-svcbind
   enabled: true
-  fullnameOverride: messagebroker
   persistence:
     enabled: false
-  serviceBindings:
-    enabled: true
 
 scheduler:
   enabled: true

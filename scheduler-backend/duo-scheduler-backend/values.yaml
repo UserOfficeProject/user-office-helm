@@ -30,19 +30,19 @@ env:
   - name: RABBITMQ_HOSTNAME
     valueFrom:
       secretKeyRef:
-        name: messagebroker-svcbind
+        name: duo-rabbitmq-svcbind
         key: host
 
   - name: RABBITMQ_USERNAME
     valueFrom:
       secretKeyRef:
-        name: messagebroker-svcbind
+        name: duo-rabbitmq-svcbind
         key: username
 
   - name: RABBITMQ_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: messagebroker-svcbind
+        name: duo-rabbitmq-svcbind
         key: password
 
 envFrom: {}
@@ -50,7 +50,7 @@ envFrom: {}
 configmap:
   data:
     NODE_ENV: ""
-    USER_OFFICE_SCHEDULER_ENDPOINT: http://user-office-app-duo-scheduler-backend:4000/graphql
+    USER_OFFICE_SCHEDULER_ENDPOINT: http://duo-scheduler-backend:4000/graphql
     RABBITMQ_SCHEDULER_EXCHANGE_NAME: user_office_scheduler_backend.fanout
     RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME: user-office-backend.proposal_scheduling.queue
     UPSERT_PROPOSAL_BOOKING_TRIGGER_STATUSES: SCHEDULING

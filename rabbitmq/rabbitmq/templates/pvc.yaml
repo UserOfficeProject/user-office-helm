@@ -1,0 +1,27 @@
+{{- if and .Values.persistence.enabled (or (eq .Values.persistence.mode "dynamic") (eq .Values.persistence.mode "static")) }}
+{{- if and (eq .Values.persistence.mode "dynamic") (not .Values.persistence.storageClass) -}}
+{{- fail "rabbitmq.persistence.storageClass is required when persistence.mode=dynamic" -}}
+{{- end -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rabbitmq.persistentVolumeClaimName" . }}
+  {{- if eq .Values.persistence.mode "static" }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  {{- if eq .Values.persistence.mode "static" }}
+  storageClassName: ""
+  volumeName: {{ include "rabbitmq.persistentVolumeName" . }}
+  {{- else }}
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
+  {{- end }}
+{{- end }}

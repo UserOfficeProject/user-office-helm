@@ -1,7 +1,7 @@
 # User Office Helm chart
 
-This chart installs the User Office applications. It does not install or
-manage PostgreSQL.
+This chart installs the User Office applications and can install a minimal,
+single-node RabbitMQ server. It does not install or manage PostgreSQL.
 
 The applications can connect to any PostgreSQL-compatible deployment that is
 reachable from the Kubernetes cluster, including:
@@ -18,6 +18,7 @@ reachable from the Kubernetes cluster, including:
 - A PostgreSQL server with a database and application user for the core
   applications
 - A second database and application user when the scheduler is enabled
+- An NFS StorageClass or NFS export when RabbitMQ persistence is enabled
 
 The core credentials are shared by `duo-backend` and `duo-factory`.
 `duo-scheduler-backend` uses the scheduler credentials. The two logical
@@ -95,7 +96,95 @@ helm upgrade --install user-office-app ./user-office-app \
   -f ./database-values.yaml
 ```
 
-The scheduler connects to the User Office core through RabbitMQ.
+The scheduler connects to the User Office core through RabbitMQ. The scheduler
+values enable the bundled RabbitMQ server because scheduler deployments without
+RabbitMQ are rejected during Helm rendering.
+
+## RabbitMQ configuration
+
+The bundled chart runs the official `rabbitmq:3.13.7-management` image as a
+single StatefulSet replica. It creates the `duo-rabbitmq-svcbind` Secret used
+by both backend applications and imports the required exchanges, queues, and
+bindings after the broker starts.
+
+Set credentials through a protected values file:
+
+```yaml
+rabbitmq:
+  enabled: true
+  auth:
+    username: duo-user
+    password: <rabbitmq-password>
+    secretName: duo-rabbitmq-svcbind
+```
+
+Helm stores these values in the release Secret. Do not commit production
+credentials or enter them as unencrypted parameters.
+
+### Dynamic NFS provisioning
+
+Use this mode when the cluster has an NFS provisioner and StorageClass, such as
+`nfs-storage`:
+
+```yaml
+rabbitmq:
+  persistence:
+    enabled: true
+    mode: dynamic
+    storageClass: nfs-storage
+    size: 8Gi
+    accessModes:
+      - ReadWriteMany
+```
+
+### Static NFS storage
+
+When no dynamic provisioner is available, the chart can create a statically
+bound PV and PVC:
+
+```yaml
+rabbitmq:
+  persistence:
+    enabled: true
+    mode: static
+    size: 8Gi
+    accessModes:
+      - ReadWriteMany
+    mountOptions:
+      - nfsvers=4.1
+    static:
+      server: nfs.example.internal
+      path: /exports/user-office/rabbitmq
+```
+
+The static PV and PVC use the `Retain` policy and Helm keep annotations. They
+remain after uninstall and must be removed manually when their data is no
+longer needed. The NFS export must already be writable by UID and GID `999`.
+Root-squashed NFS permissions cannot be repaired by the RabbitMQ pod.
+
+### Existing PVC
+
+To use storage managed outside this release:
+
+```yaml
+rabbitmq:
+  persistence:
+    enabled: true
+    mode: existing
+    existingClaim: rabbitmq-data
+```
+
+Set `rabbitmq.persistence.enabled` to `false` for disposable environments. The
+broker then uses `emptyDir`, and all broker state is lost when its pod is
+replaced.
+
+The management API and UI are available inside the namespace on
+`duo-rabbitmq:15672`; AMQP is available on `duo-rabbitmq:5672`; Prometheus
+metrics are available on `duo-rabbitmq:15692`. The Service is not exposed
+outside the cluster by default.
+
+This chart deliberately deploys one RabbitMQ node. Persistent storage protects
+against pod replacement but does not provide RabbitMQ high availability.
 
 ## Configuration
 
@@ -115,6 +204,28 @@ The scheduler connects to the User Office core through RabbitMQ.
 | `duo-backend.configmap.data.AUTH_CLIENT_SECRET` | OpenID client secret                     | Empty                              |
 | `duo-backend.configmap.data.AUTH_DISCOVERY_URL` | Full OpenID discovery endpoint           | Empty                              |
 | `rabbitmq.enabled`                              | Install RabbitMQ for application events  | `false`                            |
+| `rabbitmq.image.tag`                            | RabbitMQ image tag                       | `3.13.7-management`                |
+| `rabbitmq.auth.username`                        | RabbitMQ application user                | Required when enabled              |
+| `rabbitmq.auth.password`                        | RabbitMQ application password            | Required when enabled              |
+| `rabbitmq.auth.secretName`                      | Application connection Secret            | `duo-rabbitmq-svcbind`             |
+| `rabbitmq.persistence.enabled`                  | Persist RabbitMQ data                    | `false`                            |
+| `rabbitmq.persistence.mode`                     | `dynamic`, `static`, or `existing`       | `dynamic`                          |
+| `rabbitmq.persistence.storageClass`             | Dynamic PVC StorageClass                 | `nfs-storage`                      |
+| `rabbitmq.persistence.size`                     | Requested storage capacity               | `8Gi`                              |
+| `rabbitmq.persistence.existingClaim`            | Existing-mode PVC name                   | Empty                              |
+| `rabbitmq.persistence.static.server`            | Static-mode NFS server                   | Required for static mode           |
+| `rabbitmq.persistence.static.path`              | Static-mode NFS export path              | Required for static mode           |
+
+## Resource names
+
+The umbrella chart uses fixed component names in every namespace:
+`duo-backend`, `duo-frontend`, `duo-factory`, `duo-gateway`,
+`duo-scheduler-backend`, `duo-scheduler-frontend`, and `duo-rabbitmq`.
+These names are intentionally independent of the Helm release name so internal
+Service DNS and operational commands stay stable. A deployment that predates
+this convention must be upgraded during a maintenance window because Kubernetes
+replaces resources when their names change. Preserve or explicitly migrate a
+RabbitMQ PVC before renaming a persistence-enabled broker StatefulSet.
 
 ## Uninstalling the chart
 
@@ -123,4 +234,6 @@ helm uninstall user-office-app
 ```
 
 This removes resources managed by the Helm release. It does not remove or
-modify the PostgreSQL server, databases, or users.
+modify the PostgreSQL server, databases, or users. Static RabbitMQ PV/PVC
+resources are retained. An existing PVC is never managed or deleted by this
+chart.

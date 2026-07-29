@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "rabbitmq.fullname" . }}-test-connection
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: nc
+      image: busybox:1.36
+      command:
+        - /bin/sh
+        - -ec
+        - nc -vz -w 5 {{ include "rabbitmq.fullname" . }} {{ .Values.service.amqpPort }}

@@ -1,0 +1,3 @@
+{{- if and .Values.scheduler.enabled (not .Values.rabbitmq.enabled) -}}
+{{- fail "rabbitmq.enabled must be true when scheduler.enabled=true" -}}
+{{- end -}}
