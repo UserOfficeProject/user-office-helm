@@ -31,16 +31,6 @@ duo-backend:
         secretKeyRef:
           key: password
           name: duo-rabbitmq-svcbind
-    - name: RABBITMQ_SCHEDULER_EXCHANGE_NAME
-      valueFrom:
-        configMapKeyRef:
-          key: RABBITMQ_SCHEDULER_EXCHANGE_NAME
-          name: duo-scheduler-backend-configmap
-    - name: RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME
-      valueFrom:
-        configMapKeyRef:
-          key: RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME
-          name: duo-scheduler-backend-configmap
   ingress:
     enabled: true
     host: localhost
