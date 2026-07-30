@@ -1,7 +1,7 @@
 global:
   databases:
     core:
-      secretName: duo-database
+      secretName: duo-core-database
       host: ""
       port: 5432
       database: ""
@@ -9,7 +9,7 @@ global:
       password: ""
       sslMode: require
     scheduler:
-      secretName: scheduler-database
+      secretName: duo-scheduler-database
       host: ""
       port: 5432
       database: ""

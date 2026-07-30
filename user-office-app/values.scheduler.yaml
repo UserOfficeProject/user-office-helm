@@ -59,7 +59,7 @@ duo-scheduler-backend:
       RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME: user-office-backend.proposal_scheduling.queue
       RABBITMQ_SCHEDULER_EXCHANGE_NAME: user_office_scheduler_backend.fanout
       UPSERT_PROPOSAL_BOOKING_TRIGGER_STATUSES: SCHEDULING
-        USER_OFFICE_SCHEDULER_ENDPOINT: http://duo-scheduler-backend:4000/graphql
+      USER_OFFICE_SCHEDULER_ENDPOINT: http://duo-scheduler-backend:4000/graphql
   replicaCount: 1
 duo-scheduler-frontend:
   ingress:

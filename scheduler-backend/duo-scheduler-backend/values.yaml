@@ -12,7 +12,7 @@ image:
 global:
   databases:
     scheduler:
-      secretName: scheduler-database
+      secretName: duo-scheduler-database
 
 env:
   - name: USER_OFFICE_ENDPOINT

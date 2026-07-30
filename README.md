@@ -33,7 +33,7 @@ Create a protected values file outside the repository, for example
 global:
   databases:
     core:
-      secretName: duo-database
+      secretName: duo-core-database
       host: postgresql.example.internal
       port: 5432
       database: duo
@@ -41,7 +41,7 @@ global:
       password: <core-database-password>
       sslMode: require
     scheduler:
-      secretName: scheduler-database
+      secretName: duo-scheduler-database
       host: postgresql.example.internal
       port: 5432
       database: scheduler
@@ -190,14 +190,15 @@ against pod replacement but does not provide RabbitMQ high availability.
 
 | Parameter                                       | Description                              | Default                            |
 | ----------------------------------------------- | ---------------------------------------- | ---------------------------------- |
-| `global.databases.core.secretName`              | Generated core application Secret name   | `duo-database`                     |
+| `global.databases.core.secretName`              | Generated core application Secret name   | `duo-core-database`                |
 | `global.databases.core.host`                    | Resolvable PostgreSQL host               | Required                           |
 | `global.databases.core.port`                    | PostgreSQL port                          | `5432`                             |
 | `global.databases.core.database`                | Core database name                       | Required                           |
 | `global.databases.core.username`                | Core database user                       | Required                           |
 | `global.databases.core.password`                | Core database password                   | Required                           |
 | `global.databases.core.sslMode`                 | Core PostgreSQL SSL mode                 | `require`                          |
-| `global.databases.scheduler.*`                  | Equivalent scheduler connection settings | Required when scheduler is enabled |
+| `global.databases.scheduler.secretName`         | Generated scheduler database Secret name | `duo-scheduler-database`           |
+| `global.databases.scheduler.*`                  | Other scheduler connection settings      | Required when scheduler is enabled |
 | `duo-frontend.ingress.host`                     | Frontend hostname                        | `localhost`                        |
 | `duo-backend.ingress.host`                      | Backend hostname                         | `localhost`                        |
 | `duo-backend.configmap.data.AUTH_CLIENT_ID`     | OpenID client ID                         | Empty                              |
