@@ -1,0 +1,112 @@
+{
+  "vhosts": [{ "name": "/" }],
+  "users": [
+    {
+      "name": "__RABBITMQ_USERNAME__",
+      "password_hash": "__RABBITMQ_PASSWORD_HASH__",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["administrator"]
+    }
+  ],
+  "permissions": [
+    {
+      "user": "__RABBITMQ_USERNAME__",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "user_office_backend.fanout",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "user_office_scheduler_backend.fanout",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "DLX__user_office_backend.queue",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "DLX__user_office_scheduler_backend.queue",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "queues": [
+    {
+      "name": "user_office_backend.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "DLX__user_office_backend.queue"
+      }
+    },
+    {
+      "name": "user_office_scheduler_backend.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "DLX__user_office_scheduler_backend.queue"
+      }
+    },
+    {
+      "name": "user_office_backend.queue.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "user_office_scheduler_backend.queue.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "bindings": [
+    {
+      "source": "user_office_backend.fanout",
+      "vhost": "/",
+      "destination": "user_office_scheduler_backend.queue",
+      "destination_type": "queue",
+      "routing_key": ""
+    },
+    {
+      "source": "user_office_scheduler_backend.fanout",
+      "vhost": "/",
+      "destination": "user_office_backend.queue",
+      "destination_type": "queue",
+      "routing_key": ""
+    },
+    {
+      "source": "DLX__user_office_backend.queue",
+      "vhost": "/",
+      "destination": "user_office_backend.queue.dlq",
+      "destination_type": "queue",
+      "routing_key": ""
+    },
+    {
+      "source": "DLX__user_office_scheduler_backend.queue",
+      "vhost": "/",
+      "destination": "user_office_scheduler_backend.queue.dlq",
+      "destination_type": "queue",
+      "routing_key": ""
+    }
+  ]
+}

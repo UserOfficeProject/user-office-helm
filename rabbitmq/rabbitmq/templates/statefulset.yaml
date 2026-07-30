@@ -1,0 +1,188 @@
+{{- if ne (int .Values.replicaCount) 1 -}}
+{{- fail "rabbitmq: this minimal chart supports a single replica only (replicaCount must be 1). Use the RabbitMQ Cluster Operator for a multi-node cluster." -}}
+{{- end -}}
+{{- if and .Values.persistence.enabled (not (has .Values.persistence.mode (list "dynamic" "static" "existing"))) -}}
+{{- fail "rabbitmq.persistence.mode must be one of: dynamic, static, existing" -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "rabbitmq.fullname" . }}
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "rabbitmq.fullname" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rabbitmq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/definitions: {{ .Files.Get "files/load_definition.json" | sha256sum }}
+        checksum/credentials: {{ printf "%s:%s" .Values.auth.username .Values.auth.password | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.service.metricsPort | quote }}
+        prometheus.io/path: "/metrics"
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "rabbitmq.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: render-definitions
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              export RABBITMQ_PASSWORD_HASH="$(rabbitmqctl hash_password "$RABBITMQ_DEFAULT_PASS" | tail -n 1)"
+              python3 - <<'PY'
+              import base64
+              import json
+              import os
+
+              password_hash = os.environ["RABBITMQ_PASSWORD_HASH"]
+              try:
+                decoded_hash = base64.b64decode(password_hash, validate=True)
+              except ValueError as error:
+                raise SystemExit(f"RabbitMQ password hash is not base64: {error}")
+
+              if len(decoded_hash) != 36:
+                raise SystemExit("RabbitMQ password hash must contain a 4-byte salt and SHA-256 digest")
+
+              replacements = {
+                "__RABBITMQ_USERNAME__": os.environ["RABBITMQ_DEFAULT_USER"],
+                "__RABBITMQ_PASSWORD_HASH__": password_hash,
+              }
+
+              with open("/source/load_definition.json", encoding="utf-8") as source:
+                definitions = json.load(source)
+
+              def replace_placeholders(value):
+                if isinstance(value, str):
+                  return replacements.get(value, value)
+                if isinstance(value, list):
+                  return [replace_placeholders(item) for item in value]
+                if isinstance(value, dict):
+                  return {key: replace_placeholders(item) for key, item in value.items()}
+                return value
+
+              with open("/rendered/load_definition.json", "w", encoding="utf-8") as output:
+                json.dump(replace_placeholders(definitions), output, separators=(",", ":"))
+              PY
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.secretName" . }}
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.secretName" . }}
+                  key: password
+          volumeMounts:
+            - name: definitions-source
+              mountPath: /source
+              readOnly: true
+            - name: definitions-rendered
+              mountPath: /rendered
+      containers:
+        - name: rabbitmq
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.secretName" . }}
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.secretName" . }}
+                  key: password
+          ports:
+            - name: amqp
+              containerPort: {{ .Values.service.amqpPort }}
+              protocol: TCP
+            - name: management
+              containerPort: {{ .Values.service.managementPort }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.service.metricsPort }}
+              protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - -q
+                - ping
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - -q
+                - check_running
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - -q
+                - ping
+            periodSeconds: 30
+            timeoutSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: definitions-source
+              mountPath: /etc/rabbitmq/rabbitmq.conf
+              subPath: rabbitmq.conf
+              readOnly: true
+            - name: definitions-rendered
+              mountPath: /etc/rabbitmq/definitions
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/rabbitmq
+      volumes:
+        - name: definitions-source
+          configMap:
+            name: {{ include "rabbitmq.fullname" . }}-definitions
+        - name: definitions-rendered
+          emptyDir: {}
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "rabbitmq.persistentVolumeClaimName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

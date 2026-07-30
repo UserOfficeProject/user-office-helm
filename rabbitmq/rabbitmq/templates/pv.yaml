@@ -1,0 +1,26 @@
+{{- if and .Values.persistence.enabled (eq .Values.persistence.mode "static") }}
+{{- $server := required "rabbitmq.persistence.static.server is required when persistence.mode=static" .Values.persistence.static.server -}}
+{{- $path := required "rabbitmq.persistence.static.path is required when persistence.mode=static" .Values.persistence.static.path -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "rabbitmq.persistentVolumeName" . }}
+  annotations:
+    helm.sh/resource-policy: keep
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    {{- toYaml .Values.persistence.accessModes | nindent 4 }}
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  {{- with .Values.persistence.mountOptions }}
+  mountOptions:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  nfs:
+    server: {{ $server | quote }}
+    path: {{ $path | quote }}
+{{- end }}

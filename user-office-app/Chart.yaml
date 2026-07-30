@@ -15,7 +15,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.0
+version: 0.3.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -25,25 +25,21 @@ appVersion: "1.16.0"
 
 dependencies:
   - name: duo-backend
-    version: 0.1.0
+    version: 0.2.0
     repository: "file://../backend/duo-backend"
   - name: duo-frontend
     version: 0.1.0
     repository: "file://../frontend/duo-frontend"
   - name: duo-factory
-    version: 0.1.0
+    version: 0.2.0
     repository: "file://../factory/duo-factory"
   - name: rabbitmq
     condition: rabbitmq.enabled
-    repository: https://charts.bitnami.com/bitnami
-    version: 14.4.2
-  - name: postgresql
-    repository: https://charts.bitnami.com/bitnami
-    version: 15.5.11
-    alias: duo-db
+    repository: "file://../rabbitmq/rabbitmq"
+    version: 0.1.0
   - name: duo-scheduler-backend
     condition: scheduler.enabled
-    version: 0.1.0
+    version: 0.2.0
     repository: "file://../scheduler-backend/duo-scheduler-backend"
   - name: duo-scheduler-frontend
     condition: scheduler.enabled
@@ -53,8 +49,3 @@ dependencies:
     condition: scheduler.enabled
     version: 0.1.0
     repository: "file://../gateway/duo-gateway"
-  - name: postgresql
-    condition: scheduler.enabled
-    repository: https://charts.bitnami.com/bitnami
-    version: 15.5.11
-    alias: scheduler-db

@@ -1,0 +1,54 @@
+replicaCount: 1
+
+image:
+  repository: rabbitmq
+  tag: 3.13.7-management
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: duo-rabbitmq
+
+auth:
+  username: ""
+  password: ""
+  secretName: duo-rabbitmq-svcbind
+
+service:
+  type: ClusterIP
+  amqpPort: 5672
+  managementPort: 15672
+  metricsPort: 15692
+
+persistence:
+  enabled: false
+  mode: dynamic
+  size: 8Gi
+  accessModes:
+    - ReadWriteMany
+  storageClass: nfs-storage
+  existingClaim: ""
+  mountOptions: []
+  static:
+    server: ""
+    path: ""
+    persistentVolumeName: ""
+
+resources: {}
+
+podAnnotations: {}
+podSecurityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  runAsNonRoot: true
+  fsGroup: 999
+  fsGroupChangePolicy: OnRootMismatch
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -9,33 +9,12 @@ image:
   tag: latest
   pullPolicy: Always
 
-env:
-  - name: DATABASE_HOSTNAME
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: host
-  - name: DATABASE_PORT
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: port
-  - name: DATABASE_USER
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: username
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: password
-  - name: DATABASE_DATABASE
-    valueFrom:
-      secretKeyRef:
-        name: scheduler-db-svcbind-custom-user
-        key: database
+global:
+  databases:
+    scheduler:
+      secretName: duo-scheduler-database
 
+env:
   - name: USER_OFFICE_ENDPOINT
     valueFrom:
       configMapKeyRef:
@@ -51,19 +30,19 @@ env:
   - name: RABBITMQ_HOSTNAME
     valueFrom:
       secretKeyRef:
-        name: messagebroker-svcbind
+        name: duo-rabbitmq-svcbind
         key: host
 
   - name: RABBITMQ_USERNAME
     valueFrom:
       secretKeyRef:
-        name: messagebroker-svcbind
+        name: duo-rabbitmq-svcbind
         key: username
 
   - name: RABBITMQ_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: messagebroker-svcbind
+        name: duo-rabbitmq-svcbind
         key: password
 
 envFrom: {}
@@ -71,7 +50,7 @@ envFrom: {}
 configmap:
   data:
     NODE_ENV: ""
-    USER_OFFICE_SCHEDULER_ENDPOINT: http://user-office-app-duo-scheduler-backend:4000/graphql
+    USER_OFFICE_SCHEDULER_ENDPOINT: http://duo-scheduler-backend:4000/graphql
     RABBITMQ_SCHEDULER_EXCHANGE_NAME: user_office_scheduler_backend.fanout
     RABBITMQ_PROPOSAL_SCHEDULING_QUEUE_NAME: user-office-backend.proposal_scheduling.queue
     UPSERT_PROPOSAL_BOOKING_TRIGGER_STATUSES: SCHEDULING

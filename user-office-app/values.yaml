@@ -1,10 +1,31 @@
+global:
+  databases:
+    core:
+      secretName: duo-core-database
+      host: ""
+      port: 5432
+      database: ""
+      username: ""
+      password: ""
+      sslMode: require
+    scheduler:
+      secretName: duo-scheduler-database
+      host: ""
+      port: 5432
+      database: ""
+      username: ""
+      password: ""
+      sslMode: require
+
 duo-frontend:
+  fullnameOverride: duo-frontend
   replicaCount: 1
   ingress:
     enabled: true
     host: localhost
 
 duo-backend:
+  fullnameOverride: duo-backend
   replicaCount: 1
   ingress:
     enabled: true
@@ -26,19 +47,39 @@ duo-backend:
 duo-factory:
   fullnameOverride: duo-factory
 
-duo-db:
-  fullnameOverride: duo-db
-  serviceBindings:
-    enabled: true
-  persistence:
-    enabled: false
-  auth:
-    username: duo-user
-    password: duo-password
-    database: duo
-
 scheduler:
   enabled: false
 
+duo-gateway:
+  fullnameOverride: duo-gateway
+
+duo-scheduler-backend:
+  fullnameOverride: duo-scheduler-backend
+
+duo-scheduler-frontend:
+  fullnameOverride: duo-scheduler-frontend
+
 rabbitmq:
   enabled: false
+  fullnameOverride: duo-rabbitmq
+  image:
+    repository: rabbitmq
+    tag: 3.13.7-management
+    pullPolicy: IfNotPresent
+  auth:
+    username: ""
+    password: ""
+    secretName: duo-rabbitmq-svcbind
+  persistence:
+    enabled: false
+    mode: dynamic
+    size: 8Gi
+    accessModes:
+      - ReadWriteMany
+    storageClass: nfs-storage
+    existingClaim: ""
+    mountOptions: []
+    static:
+      server: ""
+      path: ""
+      persistentVolumeName: ""
