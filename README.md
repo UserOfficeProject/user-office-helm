@@ -1,28 +1,23 @@
 # User Office Helm chart
 
-This chart installs the User Office applications and can install a minimal,
-single-node RabbitMQ server. It does not install or manage PostgreSQL.
+This chart installs the User Office applications and can optionally install a
+minimal, single-node RabbitMQ server. It does not install or manage PostgreSQL.
 
-The applications can connect to any PostgreSQL-compatible deployment that is
-reachable from the Kubernetes cluster, including:
-
-- a standalone PostgreSQL server;
-- PostgreSQL running elsewhere in the Kubernetes cluster;
-- a managed external PostgreSQL service; or
-- an operator-managed deployment such as CloudNativePG.
+The applications connect to any PostgreSQL-compatible deployment reachable from
+the cluster, including a standalone server, an in-cluster deployment, a managed
+service, or an operator-managed deployment such as CloudNativePG.
 
 ## Prerequisites
 
 - Kubernetes
 - Helm 3
-- A PostgreSQL server with a database and application user for the core
-  applications
+- A PostgreSQL database and application user for the core applications
 - A second database and application user when the scheduler is enabled
-- An NFS StorageClass or NFS export when RabbitMQ persistence is enabled
+- An NFS StorageClass or export when RabbitMQ persistence is enabled
 
 The core credentials are shared by `duo-backend` and `duo-factory`.
-`duo-scheduler-backend` uses the scheduler credentials. The two logical
-databases may be hosted on the same PostgreSQL server or on separate servers.
+`duo-scheduler-backend` uses the scheduler credentials. The two databases may
+be hosted on the same PostgreSQL server or on separate servers.
 
 ## PostgreSQL configuration
 
@@ -50,20 +45,18 @@ global:
       sslMode: require
 ```
 
-Set `host` to the PostgreSQL hostname that application pods can resolve and
-reach. Examples include a Kubernetes Service name, a standalone server DNS
-name, or a managed database endpoint. With CloudNativePG, this is normally the
-cluster's read/write Service, such as
+Set `host` to a PostgreSQL hostname that application pods can resolve and
+reach, such as a Kubernetes Service name or a managed database endpoint. With
+CloudNativePG, this is normally the cluster's read/write Service, for example
 `my-postgres-rw.database.svc.cluster.local`.
 
-The chart creates application Secrets containing both a PostgreSQL URI and
-separate connection fields. Scheduler database fields are required only when
-`scheduler.enabled` is `true`. Set `sslMode` to an empty string if the target
-server does not use PostgreSQL SSL.
+The chart creates application Secrets containing a PostgreSQL URI and separate
+connection fields. Scheduler fields are required only when `scheduler.enabled`
+is `true`. Set `sslMode` to an empty string if the server does not use SSL.
 
 Helm stores supplied values in the release Secret. Use SOPS, a secrets manager,
 or another encrypted values workflow for production credentials. Avoid passing
-passwords through `--set`, because they can also be exposed in shell history.
+passwords through `--set`, which can also expose them in shell history.
 
 ## Installing the chart
 
@@ -96,9 +89,9 @@ helm upgrade --install user-office-app ./user-office-app \
   -f ./database-values.yaml
 ```
 
-The scheduler connects to the User Office core through RabbitMQ. The scheduler
-values enable the bundled RabbitMQ server because scheduler deployments without
-RabbitMQ are rejected during Helm rendering.
+The scheduler connects to the User Office core through RabbitMQ, so the
+scheduler values enable the bundled RabbitMQ server. Scheduler deployments
+without RabbitMQ are rejected during Helm rendering.
 
 ## RabbitMQ configuration
 
@@ -118,13 +111,9 @@ rabbitmq:
     secretName: duo-rabbitmq-svcbind
 ```
 
-Helm stores these values in the release Secret. Do not commit production
-credentials or enter them as unencrypted parameters.
-
 ### Dynamic NFS provisioning
 
-Use this mode when the cluster has an NFS provisioner and StorageClass, such as
-`nfs-storage`:
+Use this mode when the cluster has an NFS provisioner and StorageClass:
 
 ```yaml
 rabbitmq:
@@ -158,9 +147,9 @@ rabbitmq:
 ```
 
 The static PV and PVC use the `Retain` policy and Helm keep annotations. They
-remain after uninstall and must be removed manually when their data is no
-longer needed. The NFS export must already be writable by UID and GID `999`.
-Root-squashed NFS permissions cannot be repaired by the RabbitMQ pod.
+remain after uninstall and must be removed manually. The NFS export must
+already be writable by UID and GID `999`; root-squashed permissions cannot be
+repaired by the RabbitMQ pod.
 
 ### Existing PVC
 
@@ -175,16 +164,14 @@ rabbitmq:
 ```
 
 Set `rabbitmq.persistence.enabled` to `false` for disposable environments. The
-broker then uses `emptyDir`, and all broker state is lost when its pod is
-replaced.
+broker then uses `emptyDir`, and all state is lost when its pod is replaced.
 
-The management API and UI are available inside the namespace on
-`duo-rabbitmq:15672`; AMQP is available on `duo-rabbitmq:5672`; Prometheus
-metrics are available on `duo-rabbitmq:15692`. The Service is not exposed
-outside the cluster by default.
+Within the namespace, the management API and UI are available on
+`duo-rabbitmq:15672`, AMQP on `duo-rabbitmq:5672`, and Prometheus metrics on
+`duo-rabbitmq:15692`. The Service is not exposed outside the cluster.
 
 This chart deliberately deploys one RabbitMQ node. Persistent storage protects
-against pod replacement but does not provide RabbitMQ high availability.
+against pod replacement but does not provide high availability.
 
 ## Configuration
 
@@ -217,17 +204,6 @@ against pod replacement but does not provide RabbitMQ high availability.
 | `rabbitmq.persistence.static.server`            | Static-mode NFS server                   | Required for static mode           |
 | `rabbitmq.persistence.static.path`              | Static-mode NFS export path              | Required for static mode           |
 
-## Resource names
-
-The umbrella chart uses fixed component names in every namespace:
-`duo-backend`, `duo-frontend`, `duo-factory`, `duo-gateway`,
-`duo-scheduler-backend`, `duo-scheduler-frontend`, and `duo-rabbitmq`.
-These names are intentionally independent of the Helm release name so internal
-Service DNS and operational commands stay stable. A deployment that predates
-this convention must be upgraded during a maintenance window because Kubernetes
-replaces resources when their names change. Preserve or explicitly migrate a
-RabbitMQ PVC before renaming a persistence-enabled broker StatefulSet.
-
 ## Uninstalling the chart
 
 ```console
@@ -236,5 +212,5 @@ helm uninstall user-office-app
 
 This removes resources managed by the Helm release. It does not remove or
 modify the PostgreSQL server, databases, or users. Static RabbitMQ PV/PVC
-resources are retained. An existing PVC is never managed or deleted by this
+resources are retained, and an existing PVC is never managed or deleted by this
 chart.
