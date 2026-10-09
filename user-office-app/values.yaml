@@ -12,15 +12,14 @@ duo-frontend:
     enabled: true
     host: localhost
 
-# chat-uos: agent chat at <duo-frontend host>/chat-uos. It reads the User Office
-# session from localStorage, so it must share the User Office hostname.
-# Set N8N_WEBHOOK_URL per environment; the container refuses to start without it.
+# Optional agent chat served at <duo-frontend host>/chat-uos, reusing the
+# duo-frontend chart. Set image.repository and env per installation.
 duo-chat-uos:
   enabled: false
   fullnameOverride: duo-chat-uos
   replicaCount: 1
   image:
-    repository: ghcr.io/userofficeproject/chat-uos
+    repository: ""
     tag: latest
   ingress:
     enabled: true
@@ -28,13 +27,7 @@ duo-chat-uos:
     pathType: Prefix
     paths:
       - /chat-uos
-  env:
-    # n8n Chat Trigger (webhook mode) URL of the agent; required.
-    - name: N8N_WEBHOOK_URL
-      value: ""
-    # Where "Sign in" and "User Office" links point; "/" is the same host.
-    - name: USER_OFFICE_URL
-      value: /
+  env: []
 
 duo-backend:
   fullnameOverride: duo-backend
