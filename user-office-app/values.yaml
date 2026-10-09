@@ -2,20 +2,8 @@ global:
   databases:
     core:
       secretName: duo-core-database
-      host: ""
-      port: 5432
-      database: ""
-      username: ""
-      password: ""
-      sslMode: require
     scheduler:
       secretName: duo-scheduler-database
-      host: ""
-      port: 5432
-      database: ""
-      username: ""
-      password: ""
-      sslMode: require
 
 duo-frontend:
   fullnameOverride: duo-frontend
@@ -23,6 +11,30 @@ duo-frontend:
   ingress:
     enabled: true
     host: localhost
+
+# chat-uos: agent chat at <duo-frontend host>/chat-uos. It reads the User Office
+# session from localStorage, so it must share the User Office hostname.
+# Set N8N_WEBHOOK_URL per environment; the container refuses to start without it.
+duo-chat-uos:
+  enabled: false
+  fullnameOverride: duo-chat-uos
+  replicaCount: 1
+  image:
+    repository: ghcr.io/userofficeproject/chat-uos
+    tag: latest
+  ingress:
+    enabled: true
+    host: localhost
+    pathType: Prefix
+    paths:
+      - /chat-uos
+  env:
+    # n8n Chat Trigger (webhook mode) URL of the agent; required.
+    - name: N8N_WEBHOOK_URL
+      value: ""
+    # Where "Sign in" and "User Office" links point; "/" is the same host.
+    - name: USER_OFFICE_URL
+      value: /
 
 duo-backend:
   fullnameOverride: duo-backend
@@ -67,8 +79,6 @@ rabbitmq:
     tag: 3.13.7-management
     pullPolicy: IfNotPresent
   auth:
-    username: ""
-    password: ""
     secretName: duo-rabbitmq-svcbind
   persistence:
     enabled: false
@@ -83,3 +93,38 @@ rabbitmq:
       server: ""
       path: ""
       persistentVolumeName: ""
+
+# Application Secrets are synced from Vault by the Vault Secrets Operator (VSO),
+# one VaultStaticSecret per entry, read from <mount>/<pathPrefix>/<path|name>.
+# Uses the operator's default VaultAuth unless authRef is set.
+vault:
+  authRef: ""
+  mount: static
+  type: kv-v2
+  pathPrefix: ""  # e.g. user-office/dev
+  refreshAfter: 60s
+  secrets:
+    - name: duo-backend-secret
+      rolloutRestartTargets:
+        - kind: Deployment
+          name: duo-backend
+    - name: duo-core-database
+      rolloutRestartTargets:
+        - kind: Deployment
+          name: duo-backend
+        - kind: Deployment
+          name: duo-factory
+    - name: duo-scheduler-database
+      condition: scheduler.enabled
+      rolloutRestartTargets:
+        - kind: Deployment
+          name: duo-scheduler-backend
+    - name: duo-rabbitmq-svcbind
+      condition: rabbitmq.enabled
+      rolloutRestartTargets:
+        - kind: StatefulSet
+          name: duo-rabbitmq
+        - kind: Deployment
+          name: duo-backend
+        - kind: Deployment
+          name: duo-scheduler-backend

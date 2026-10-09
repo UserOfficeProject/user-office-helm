@@ -12,6 +12,9 @@ image:
   pullPolicy: Always
 
 imagePullSecrets: []
+
+# Extra container env vars, e.g. runtime config for the served app.
+env: []
 nameOverride: ""
 fullnameOverride: ""
 

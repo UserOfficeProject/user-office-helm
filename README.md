@@ -11,6 +11,7 @@ service, or an operator-managed deployment such as CloudNativePG.
 
 - Kubernetes
 - Helm 3
+- Vault Secrets Operator, with credentials stored in Vault (see below)
 - A PostgreSQL database and application user for the core applications
 - A second database and application user when the scheduler is enabled
 - An NFS StorageClass or export when RabbitMQ persistence is enabled
@@ -19,44 +20,46 @@ The core credentials are shared by `duo-backend` and `duo-factory`.
 `duo-scheduler-backend` uses the scheduler credentials. The two databases may
 be hosted on the same PostgreSQL server or on separate servers.
 
-## PostgreSQL configuration
+## Secrets (Vault)
 
-Create a protected values file outside the repository, for example
-`database-values.yaml`:
+The chart does not create Kubernetes Secrets. Credentials live in Vault and
+are synced by the [Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso)
+(VSO): the chart renders one `VaultStaticSecret` per entry in `vault.secrets`,
+and VSO writes a Secret of the same name, adopting an existing one if present.
+
+Prerequisites:
+
+- VSO installed, with a default `VaultConnection` and `VaultAuth` (or set
+  `vault.authRef` to a `VaultAuth` the release namespace may use)
+- A Vault role that lets that `VaultAuth` read the secrets below
+
+Each Secret is read from `<vault.mount>/<vault.pathPrefix>/<name>`, for example
+`static/user-office/dev/duo-core-database`:
 
 ```yaml
-global:
-  databases:
-    core:
-      secretName: duo-core-database
-      host: postgresql.example.internal
-      port: 5432
-      database: duo
-      username: duo-user
-      password: <core-database-password>
-      sslMode: require
-    scheduler:
-      secretName: duo-scheduler-database
-      host: postgresql.example.internal
-      port: 5432
-      database: scheduler
-      username: scheduler-user
-      password: <scheduler-database-password>
-      sslMode: require
+vault:
+  mount: static
+  type: kv-v2
+  pathPrefix: user-office/dev
 ```
 
-Set `host` to a PostgreSQL hostname that application pods can resolve and
-reach, such as a Kubernetes Service name or a managed database endpoint. With
-CloudNativePG, this is normally the cluster's read/write Service, for example
-`my-postgres-rw.database.svc.cluster.local`.
+| Secret | Required keys | Rendered when |
+|---|---|---|
+| `duo-core-database` | `host`, `port`, `username`, `password`, `database`, `dbname`, `uri` | always |
+| `duo-scheduler-database` | same as core | `scheduler.enabled` |
+| `duo-rabbitmq-svcbind` | `host`, `port`, `username`, `password` | `rabbitmq.enabled` |
+| `duo-backend-secret` | backend environment variables, e.g. `EAM_AUTH_USER` | always |
 
-The chart creates application Secrets containing a PostgreSQL URI and separate
-connection fields. Scheduler fields are required only when `scheduler.enabled`
-is `true`. Set `sslMode` to an empty string if the server does not use SSL.
+`uri` is a PostgreSQL connection string,
+`postgresql://<user>:<password>@<host>:<port>/<database>[?sslmode=...]`. Set
+`host` to a hostname application pods can reach; with CloudNativePG this is
+normally the cluster's read/write Service, for example
+`my-postgres-rw.database.svc.cluster.local`. The core database is shared by
+`duo-backend` and `duo-factory`.
 
-Helm stores supplied values in the release Secret. Use SOPS, a secrets manager,
-or another encrypted values workflow for production credentials. Avoid passing
-passwords through `--set`, which can also expose them in shell history.
+When a value changes in Vault, VSO updates the Secret within
+`vault.refreshAfter` and restarts the workloads listed in that entry's
+`rolloutRestartTargets`.
 
 ## Installing the chart
 
@@ -74,7 +77,6 @@ Install or upgrade the release:
 ```console
 helm upgrade --install user-office-app ./user-office-app \
   -f ./user-office-app/values.yaml \
-  -f ./database-values.yaml \
   --set-string duo-backend.configmap.data.AUTH_CLIENT_ID=<AUTH_CLIENT_ID> \
   --set-string duo-backend.configmap.data.AUTH_CLIENT_SECRET=<AUTH_CLIENT_SECRET> \
   --set-string duo-backend.configmap.data.AUTH_DISCOVERY_URL=<OIDC_DISCOVERY_URL>
@@ -85,8 +87,7 @@ To enable the scheduler, include its values file:
 ```console
 helm upgrade --install user-office-app ./user-office-app \
   -f ./user-office-app/values.yaml \
-  -f ./user-office-app/values.scheduler.yaml \
-  -f ./database-values.yaml
+  -f ./user-office-app/values.scheduler.yaml
 ```
 
 The scheduler connects to the User Office core through RabbitMQ, so the
@@ -96,20 +97,10 @@ without RabbitMQ are rejected during Helm rendering.
 ## RabbitMQ configuration
 
 The bundled chart runs the official `rabbitmq:3.13.7-management` image as a
-single StatefulSet replica. It creates the `duo-rabbitmq-svcbind` Secret used
-by both backend applications and imports the required exchanges, queues, and
+single StatefulSet replica. It reads its credentials from the
+`duo-rabbitmq-svcbind` Secret (synced from Vault, see above), which both backend
+applications also use, and imports the required exchanges, queues, and
 bindings after the broker starts.
-
-Set credentials through a protected values file:
-
-```yaml
-rabbitmq:
-  enabled: true
-  auth:
-    username: duo-user
-    password: <rabbitmq-password>
-    secretName: duo-rabbitmq-svcbind
-```
 
 ### Dynamic NFS provisioning
 
@@ -177,15 +168,14 @@ against pod replacement but does not provide high availability.
 
 | Parameter                                       | Description                              | Default                            |
 | ----------------------------------------------- | ---------------------------------------- | ---------------------------------- |
-| `global.databases.core.secretName`              | Generated core application Secret name   | `duo-core-database`                |
-| `global.databases.core.host`                    | Resolvable PostgreSQL host               | Required                           |
-| `global.databases.core.port`                    | PostgreSQL port                          | `5432`                             |
-| `global.databases.core.database`                | Core database name                       | Required                           |
-| `global.databases.core.username`                | Core database user                       | Required                           |
-| `global.databases.core.password`                | Core database password                   | Required                           |
-| `global.databases.core.sslMode`                 | Core PostgreSQL SSL mode                 | `require`                          |
-| `global.databases.scheduler.secretName`         | Generated scheduler database Secret name | `duo-scheduler-database`           |
-| `global.databases.scheduler.*`                  | Other scheduler connection settings      | Required when scheduler is enabled |
+| `global.databases.core.secretName`              | Core database Secret name (from Vault)   | `duo-core-database`                |
+| `global.databases.scheduler.secretName`         | Scheduler database Secret name           | `duo-scheduler-database`           |
+| `vault.mount`                                   | Vault KV mount                           | `static`                           |
+| `vault.type`                                    | `kv-v2` or `kv-v1`                       | `kv-v2`                            |
+| `vault.pathPrefix`                              | Path prefix under the mount              | Required                           |
+| `vault.refreshAfter`                            | How often VSO re-reads Vault             | `60s`                              |
+| `vault.authRef`                                 | VaultAuth to use                         | Operator default                   |
+| `vault.secrets`                                 | Secrets synced from Vault                | See `values.yaml`                  |
 | `duo-frontend.ingress.host`                     | Frontend hostname                        | `localhost`                        |
 | `duo-backend.ingress.host`                      | Backend hostname                         | `localhost`                        |
 | `duo-backend.configmap.data.AUTH_CLIENT_ID`     | OpenID client ID                         | Empty                              |
@@ -193,8 +183,6 @@ against pod replacement but does not provide high availability.
 | `duo-backend.configmap.data.AUTH_DISCOVERY_URL` | Full OpenID discovery endpoint           | Empty                              |
 | `rabbitmq.enabled`                              | Install RabbitMQ for application events  | `false`                            |
 | `rabbitmq.image.tag`                            | RabbitMQ image tag                       | `3.13.7-management`                |
-| `rabbitmq.auth.username`                        | RabbitMQ application user                | Required when enabled              |
-| `rabbitmq.auth.password`                        | RabbitMQ application password            | Required when enabled              |
 | `rabbitmq.auth.secretName`                      | Application connection Secret            | `duo-rabbitmq-svcbind`             |
 | `rabbitmq.persistence.enabled`                  | Persist RabbitMQ data                    | `false`                            |
 | `rabbitmq.persistence.mode`                     | `dynamic`, `static`, or `existing`       | `dynamic`                          |

@@ -35,9 +35,6 @@ duo-backend:
     enabled: true
     host: localhost
   replicaCount: 1
-  secret:
-    data:
-      SPARKPOST_TOKEN: Y2hhbmdldGhpc3NlY3JldA==
 
 duo-frontend:
   ingress:
@@ -69,8 +66,6 @@ duo-scheduler-frontend:
 
 rabbitmq:
   auth:
-    password: duo-password
-    username: duo-user
     secretName: duo-rabbitmq-svcbind
   enabled: true
   persistence:
