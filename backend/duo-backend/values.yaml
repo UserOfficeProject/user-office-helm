@@ -23,10 +23,6 @@ configmap:
     RABBITMQ_CORE_EXCHANGE_NAME: ""
     RABBITMQ_CORE_QUEUE_NAME: ""
 
-secret:
-  data:
-    secret: ""
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

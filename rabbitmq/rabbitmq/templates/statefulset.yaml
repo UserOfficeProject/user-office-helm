@@ -20,7 +20,6 @@ spec:
     metadata:
       annotations:
         checksum/definitions: {{ .Files.Get "files/load_definition.json" | sha256sum }}
-        checksum/credentials: {{ printf "%s:%s" .Values.auth.username .Values.auth.password | sha256sum }}
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.service.metricsPort | quote }}
         prometheus.io/path: "/metrics"

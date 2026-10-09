@@ -10,8 +10,8 @@ nameOverride: ""
 fullnameOverride: duo-rabbitmq
 
 auth:
-  username: ""
-  password: ""
+  # Secret with host, port, username and password keys; created from Vault by
+  # the umbrella chart (VaultStaticSecret).
   secretName: duo-rabbitmq-svcbind
 
 service:
